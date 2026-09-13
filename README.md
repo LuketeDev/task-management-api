@@ -2,7 +2,7 @@
 
 API REST de gerenciamento de tarefas, construída com Java 21, Spring Boot e PostgreSQL.
 
-Este estágio contém somente o bootstrap do projeto. Ainda não há recursos, endpoints ou modelo de `Task` implementados.
+O projeto possui o bootstrap e o modelo JPA inicial de `Task`. Ainda não há endpoints, serviços, repositórios ou migrations do domínio.
 
 ## Tecnologias
 
@@ -41,6 +41,8 @@ No Windows:
 ```bat
 gradlew.bat bootRun
 ```
+
+> Enquanto a primeira migration da tabela `tasks` não for adicionada, a aplicação não iniciará fora do ambiente de testes. Isso é intencional: o Hibernate está em modo `validate` e não cria schema automaticamente.
 
 Após iniciada, a documentação Swagger estará disponível em [http://localhost:8080/swagger-ui.html](http://localhost:8080/swagger-ui.html).
 
