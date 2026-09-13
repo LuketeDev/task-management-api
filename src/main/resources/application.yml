@@ -1,0 +1,25 @@
+spring:
+  application:
+    name: task-manager-api
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/task_management}
+    username: ${DB_USERNAME:task_management}
+    password: ${DB_PASSWORD:task_management}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
