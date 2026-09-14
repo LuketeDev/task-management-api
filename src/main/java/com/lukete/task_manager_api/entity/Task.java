@@ -49,6 +49,25 @@ public class Task {
 	@Column(nullable = false)
 	private Instant updatedAt;
 
+	public Task(String title, String description, TaskStatus status, TaskPriority priority, LocalDate dueDate) {
+		this.title = title;
+		this.description = description;
+		this.status = status;
+		this.priority = priority;
+		this.dueDate = dueDate;
+	}
+
+	public void updateDetails(String title, String description, TaskPriority priority, LocalDate dueDate) {
+		this.title = title;
+		this.description = description;
+		this.priority = priority;
+		this.dueDate = dueDate;
+	}
+
+	public void changeStatus(TaskStatus status) {
+		this.status = status;
+	}
+
 	@PrePersist
 	private void setCreationAuditFields() {
 		Instant now = Instant.now();
