@@ -1,27 +1,31 @@
 package com.lukete.task_manager_api.service;
 
-import com.lukete.task_manager_api.entity.Task;
-import com.lukete.task_manager_api.entity.TaskPriority;
-import com.lukete.task_manager_api.entity.TaskStatus;
-import com.lukete.task_manager_api.exception.ResourceNotFoundException;
-import com.lukete.task_manager_api.repository.TaskRepository;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.EnumSource;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import com.lukete.task_manager_api.entity.Task;
+import com.lukete.task_manager_api.entity.TaskPriority;
+import com.lukete.task_manager_api.entity.TaskStatus;
+import com.lukete.task_manager_api.exception.ResourceNotFoundException;
+import com.lukete.task_manager_api.repository.TaskRepository;
 
 @ExtendWith(MockitoExtension.class)
 class TaskServiceTest {
@@ -41,7 +45,8 @@ class TaskServiceTest {
 
 	@Test
 	void shouldCreateTaskWithPendingStatusAndDefaultPriority() {
-		Task task = new Task("Write documentation", "Describe the API", TaskStatus.COMPLETED, null, LocalDate.now().plusDays(1));
+		Task task = new Task("Write documentation", "Describe the API", TaskStatus.COMPLETED, null,
+				LocalDate.now().plusDays(1));
 		when(taskRepository.save(task)).thenReturn(task);
 
 		Task createdTask = taskService.create(task);
@@ -85,7 +90,8 @@ class TaskServiceTest {
 	@Test
 	void shouldUpdateTaskDetailsWithoutChangingStatus() {
 		Task existingTask = taskWithStatus(TaskStatus.IN_PROGRESS);
-		Task updatedTask = new Task("Updated title", "Updated description", TaskStatus.CANCELLED, TaskPriority.LOW, LocalDate.now().plusDays(2));
+		Task updatedTask = new Task("Updated title", "Updated description", TaskStatus.CANCELLED, TaskPriority.LOW,
+				LocalDate.now().plusDays(2));
 		when(taskRepository.findById(taskId)).thenReturn(Optional.of(existingTask));
 		when(taskRepository.save(existingTask)).thenReturn(existingTask);
 
@@ -109,15 +115,20 @@ class TaskServiceTest {
 		verify(taskRepository).delete(task);
 	}
 
-	@Test
-	void shouldChangeStatusWhenTransitionIsValid() {
-		Task task = taskWithStatus(TaskStatus.PENDING);
+	@ParameterizedTest
+	@CsvSource({
+			"PENDING, CANCELLED",
+			"IN_PROGRESS, COMPLETED",
+			"IN_PROGRESS, CANCELLED"
+	})
+	void shouldChangeStatusWhenTransitionIsValid(TaskStatus currentStatus, TaskStatus newStatus) {
+		Task task = taskWithStatus(currentStatus);
 		when(taskRepository.findById(taskId)).thenReturn(Optional.of(task));
 		when(taskRepository.save(task)).thenReturn(task);
 
-		Task result = taskService.changeStatus(taskId, TaskStatus.IN_PROGRESS);
+		Task result = taskService.changeStatus(taskId, newStatus);
 
-		assertThat(result.getStatus()).isEqualTo(TaskStatus.IN_PROGRESS);
+		assertThat(result.getStatus()).isEqualTo(newStatus);
 		verify(taskRepository).save(task);
 	}
 
@@ -156,6 +167,7 @@ class TaskServiceTest {
 	}
 
 	private Task taskWithStatus(TaskStatus status) {
-		return new Task("Write documentation", "Describe the API", status, TaskPriority.HIGH, LocalDate.now().plusDays(1));
+		return new Task("Write documentation", "Describe the API", status, TaskPriority.HIGH,
+				LocalDate.now().plusDays(1));
 	}
 }
