@@ -3,6 +3,7 @@ package com.lukete.task_manager_api.service;
 import com.lukete.task_manager_api.entity.Task;
 import com.lukete.task_manager_api.entity.TaskPriority;
 import com.lukete.task_manager_api.entity.TaskStatus;
+import com.lukete.task_manager_api.exception.InvalidTaskStatusTransition;
 import com.lukete.task_manager_api.exception.ResourceNotFoundException;
 import com.lukete.task_manager_api.repository.TaskRepository;
 import lombok.RequiredArgsConstructor;
@@ -46,8 +47,7 @@ public class TaskService {
 				updatedTask.getTitle(),
 				updatedTask.getDescription(),
 				priority,
-				updatedTask.getDueDate()
-		);
+				updatedTask.getDueDate());
 
 		return taskRepository.save(existingTask);
 	}
@@ -56,9 +56,7 @@ public class TaskService {
 		Task task = findById(id);
 
 		if (!isValidTransition(task.getStatus(), newStatus)) {
-			throw new IllegalStateException(
-					"Invalid status transition from " + task.getStatus() + " to " + newStatus
-			);
+			throw new InvalidTaskStatusTransition(task.getStatus(), newStatus);
 		}
 
 		task.changeStatus(newStatus);
