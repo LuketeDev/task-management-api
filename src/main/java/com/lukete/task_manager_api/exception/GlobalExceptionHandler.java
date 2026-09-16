@@ -5,8 +5,10 @@ import java.time.ZoneId;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import com.lukete.task_manager_api.dto.response.ApiErrorResponse;
 
@@ -38,6 +40,25 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ApiErrorResponse(
                 "UNEXPECTED_ERROR",
                 ex.getMessage(),
+                LocalDateTime.now(DEFAULT_ZONE)));
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ApiErrorResponse> handleInvalidJson(
+            HttpMessageNotReadableException ex) {
+        return ResponseEntity.badRequest().body(new ApiErrorResponse(
+                "INVALID_REQUEST_BODY",
+                ex.getMessage(),
+                LocalDateTime.now(DEFAULT_ZONE)));
+    }
+
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ApiErrorResponse> handleTypeMismatch(
+            MethodArgumentTypeMismatchException ex) {
+        String message = "Invalid value for parameter: " + ex.getName();
+        return ResponseEntity.badRequest().body(new ApiErrorResponse(
+                "INVALID_PARAMETER_FORMAT",
+                message,
                 LocalDateTime.now(DEFAULT_ZONE)));
     }
 }
