@@ -1,16 +1,18 @@
 package com.lukete.task_manager_api.service;
 
+import java.util.List;
+import java.util.UUID;
+
+import org.springframework.stereotype.Service;
+
 import com.lukete.task_manager_api.entity.Task;
 import com.lukete.task_manager_api.entity.TaskPriority;
 import com.lukete.task_manager_api.entity.TaskStatus;
-import com.lukete.task_manager_api.exception.InvalidTaskStatusTransition;
+import com.lukete.task_manager_api.exception.InvalidTaskStatusTransitionException;
 import com.lukete.task_manager_api.exception.ResourceNotFoundException;
 import com.lukete.task_manager_api.repository.TaskRepository;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.UUID;
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
@@ -56,7 +58,7 @@ public class TaskService {
 		Task task = findById(id);
 
 		if (!isValidTransition(task.getStatus(), newStatus)) {
-			throw new InvalidTaskStatusTransition(task.getStatus(), newStatus);
+			throw new InvalidTaskStatusTransitionException(task.getStatus(), newStatus);
 		}
 
 		task.changeStatus(newStatus);

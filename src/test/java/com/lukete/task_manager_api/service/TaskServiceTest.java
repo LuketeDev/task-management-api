@@ -23,7 +23,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import com.lukete.task_manager_api.entity.Task;
 import com.lukete.task_manager_api.entity.TaskPriority;
 import com.lukete.task_manager_api.entity.TaskStatus;
-import com.lukete.task_manager_api.exception.InvalidTaskStatusTransition;
+import com.lukete.task_manager_api.exception.InvalidTaskStatusTransitionException;
 import com.lukete.task_manager_api.exception.ResourceNotFoundException;
 import com.lukete.task_manager_api.repository.TaskRepository;
 
@@ -138,7 +138,7 @@ class TaskServiceTest {
 		when(taskRepository.findById(taskId)).thenReturn(Optional.of(task));
 
 		assertThatThrownBy(() -> taskService.changeStatus(taskId, TaskStatus.COMPLETED))
-				.isInstanceOf(InvalidTaskStatusTransition.class)
+				.isInstanceOf(InvalidTaskStatusTransitionException.class)
 				.hasMessageContaining("Invalid status transition");
 
 		verify(taskRepository, never()).save(task);
@@ -150,7 +150,7 @@ class TaskServiceTest {
 		when(taskRepository.findById(taskId)).thenReturn(Optional.of(task));
 
 		assertThatThrownBy(() -> taskService.changeStatus(taskId, TaskStatus.CANCELLED))
-				.isInstanceOf(InvalidTaskStatusTransition.class);
+				.isInstanceOf(InvalidTaskStatusTransitionException.class);
 
 		verify(taskRepository, never()).save(task);
 	}
@@ -161,7 +161,7 @@ class TaskServiceTest {
 		when(taskRepository.findById(taskId)).thenReturn(Optional.of(task));
 
 		assertThatThrownBy(() -> taskService.changeStatus(taskId, TaskStatus.IN_PROGRESS))
-				.isInstanceOf(InvalidTaskStatusTransition.class);
+				.isInstanceOf(InvalidTaskStatusTransitionException.class);
 
 		verify(taskRepository, never()).save(task);
 	}
