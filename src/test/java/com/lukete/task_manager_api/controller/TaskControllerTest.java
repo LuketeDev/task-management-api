@@ -22,6 +22,7 @@ import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.cglib.core.Local;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -59,6 +60,8 @@ class TaskControllerTest {
 		when(taskService.create(task)).thenReturn(task);
 		when(taskMapper.toResponse(task)).thenReturn(response);
 
+		LocalDate dueDate = LocalDate.now().plusDays(1);
+
 		mockMvc.perform(post(TASKS_URL)
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(
@@ -67,9 +70,9 @@ class TaskControllerTest {
 									"title":"Write tests",
 									"description":"Controller tests",
 									"priority":"HIGH",
-									"dueDate":"2026-09-17"
+									"dueDate":"%s"
 								}
-										"""))
+										""".formatted(dueDate)))
 				.andExpect(status().isCreated())
 				.andExpect(header().string("Location", "http://localhost/api/v1/tasks/" + id))
 				.andExpect(jsonPath("$.id").value(id.toString()))
@@ -127,6 +130,8 @@ class TaskControllerTest {
 		when(taskService.update(id, task)).thenReturn(task);
 		when(taskMapper.toResponse(task)).thenReturn(response);
 
+		LocalDate dueDate = LocalDate.now().plusDays(1);
+
 		mockMvc.perform(put(TASKS_URL + "/{id}", id)
 				.contentType(MediaType.APPLICATION_JSON)
 				.content("""
@@ -134,9 +139,9 @@ class TaskControllerTest {
 							"title":"Updated task",
 							"description":"Updated description",
 							"priority":"LOW",
-							"dueDate":"2026-09-18"
+							"dueDate":"%s"
 						}
-							"""))
+							""".formatted(dueDate)))
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.title").value("Updated task"));
 
