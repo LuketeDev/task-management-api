@@ -1,8 +1,8 @@
 package com.lukete.task_manager_api.controller;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -11,18 +11,20 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.lang.reflect.Field;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
-import org.springframework.cglib.core.Local;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -52,6 +54,38 @@ class TaskControllerTest {
 	private TaskMapper taskMapper;
 
 	@Test
+	void shouldFindAllTasks() throws Exception {
+
+		UUID id = UUID.randomUUID();
+		Task task = taskWithId(id);
+
+		TaskResponse response = new TaskResponse(
+				task.getId(),
+				task.getTitle(),
+				task.getDescription(),
+				task.getStatus(),
+				task.getPriority(),
+				task.getDueDate(),
+				task.getCreatedAt(),
+				task.getUpdatedAt());
+
+		when(taskService.findAll()).thenReturn(List.of(task));
+		when(taskMapper.toResponse(task)).thenReturn(response);
+
+		assertThat(task).isNotNull();
+		assertThat(taskMapper.toResponse(task)).isNotNull();
+
+		mockMvc.perform(get(TASKS_URL))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$[0].title").value(task.getTitle()))
+				.andExpect(jsonPath("$[0].description").value(task.getDescription()))
+				.andExpect(jsonPath("$[0].status").value(task.getStatus().name()))
+				.andExpect(jsonPath("$[0].priority").value(task.getPriority().name()));
+
+		verify(taskService).findAll();
+	}
+
+	@Test
 	void shouldCreateTaskWhenRequestIsValid() throws Exception {
 		UUID id = UUID.randomUUID();
 		Task task = taskWithId(id);
@@ -61,6 +95,8 @@ class TaskControllerTest {
 		when(taskMapper.toResponse(task)).thenReturn(response);
 
 		LocalDate dueDate = LocalDate.now().plusDays(1);
+
+		assertThat(task.getId()).isEqualTo(id);
 
 		mockMvc.perform(post(TASKS_URL)
 				.contentType(MediaType.APPLICATION_JSON)
@@ -179,8 +215,21 @@ class TaskControllerTest {
 	}
 
 	private Task taskWithId(UUID id) {
-		Task task = mock(Task.class);
-		when(task.getId()).thenReturn(id);
+		Task task = new Task(
+				"Write documentation",
+				"Describe the API",
+				TaskStatus.PENDING,
+				TaskPriority.HIGH,
+				LocalDate.now().plusDays(1));
+
+		try {
+			Field field = Task.class.getDeclaredField("id");
+			field.setAccessible(true);
+			field.set(task, id);
+		} catch (ReflectiveOperationException e) {
+			throw new IllegalStateException("Could not set task id", e);
+		}
+
 		return task;
 	}
 

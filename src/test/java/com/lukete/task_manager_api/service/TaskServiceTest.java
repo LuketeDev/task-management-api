@@ -57,6 +57,19 @@ class TaskServiceTest {
 	}
 
 	@Test
+	void shouldCreateTaskWithPendingStatusAndSetPriority() {
+		Task task = new Task("Write documentation", "Describe the API", TaskStatus.COMPLETED, TaskPriority.HIGH,
+				LocalDate.now().plusDays(1));
+		when(taskRepository.save(task)).thenReturn(task);
+
+		Task createdTask = taskService.create(task);
+
+		assertThat(createdTask.getStatus()).isEqualTo(TaskStatus.PENDING);
+		assertThat(createdTask.getPriority()).isEqualTo(TaskPriority.HIGH);
+		verify(taskRepository).save(task);
+	}
+
+	@Test
 	void shouldFindExistingTaskById() {
 		Task task = taskWithStatus(TaskStatus.PENDING);
 		when(taskRepository.findById(taskId)).thenReturn(Optional.of(task));
@@ -106,6 +119,25 @@ class TaskServiceTest {
 	}
 
 	@Test
+	void shouldKeepExistingPriorityWhenUpdatedTaskPriorityIsNull() {
+		Task existingTask = taskWithStatus(TaskStatus.IN_PROGRESS);
+		Task updatedTask = new Task(
+				"Updated title",
+				"Updated description",
+				TaskStatus.CANCELLED,
+				null,
+				LocalDate.now().plusDays(2));
+
+		when(taskRepository.findById(taskId)).thenReturn(Optional.of(existingTask));
+		when(taskRepository.save(existingTask)).thenReturn(existingTask);
+
+		Task result = taskService.update(taskId, updatedTask);
+
+		assertThat(result.getPriority()).isEqualTo(existingTask.getPriority());
+		verify(taskRepository).save(existingTask);
+	}
+
+	@Test
 	void shouldDeleteExistingTask() {
 		Task task = taskWithStatus(TaskStatus.PENDING);
 		when(taskRepository.findById(taskId)).thenReturn(Optional.of(task));
@@ -118,8 +150,9 @@ class TaskServiceTest {
 	@ParameterizedTest
 	@CsvSource({
 			"PENDING, CANCELLED",
+			"PENDING, IN_PROGRESS",
 			"IN_PROGRESS, COMPLETED",
-			"IN_PROGRESS, CANCELLED"
+			"IN_PROGRESS, CANCELLED",
 	})
 	void shouldChangeStatusWhenTransitionIsValid(TaskStatus currentStatus, TaskStatus newStatus) {
 		Task task = taskWithStatus(currentStatus);
@@ -150,6 +183,17 @@ class TaskServiceTest {
 		when(taskRepository.findById(taskId)).thenReturn(Optional.of(task));
 
 		assertThatThrownBy(() -> taskService.changeStatus(taskId, TaskStatus.CANCELLED))
+				.isInstanceOf(InvalidTaskStatusTransitionException.class);
+
+		verify(taskRepository, never()).save(task);
+	}
+
+	@Test
+	void shouldRejectPendingStatusFromInProgressTask() {
+		Task task = taskWithStatus(TaskStatus.IN_PROGRESS);
+		when(taskRepository.findById(taskId)).thenReturn(Optional.of(task));
+
+		assertThatThrownBy(() -> taskService.changeStatus(taskId, TaskStatus.PENDING))
 				.isInstanceOf(InvalidTaskStatusTransitionException.class);
 
 		verify(taskRepository, never()).save(task);
