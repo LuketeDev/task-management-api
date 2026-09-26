@@ -1,0 +1,25 @@
+
+> Task :dependencyInsight
+org.apache.tomcat.embed:tomcat-embed-websocket:11.0.24 (selected by rule)
+  Variant runtime:
+    | Attribute Name                 | Provided     | Requested    |
+    |--------------------------------|--------------|--------------|
+    | org.gradle.status              | release      |              |
+    | org.gradle.category            | library      | library      |
+    | org.gradle.libraryelements     | jar          | jar          |
+    | org.gradle.usage               | java-runtime | java-runtime |
+    | org.gradle.dependency.bundling |              | external     |
+    | org.gradle.jvm.environment     |              | standard-jvm |
+    | org.gradle.jvm.version         |              | 21           |
+
+org.apache.tomcat.embed:tomcat-embed-websocket:11.0.24
+\--- org.springframework.boot:spring-boot-starter-tomcat-runtime:4.1.1
+     \--- org.springframework.boot:spring-boot-starter-tomcat:4.1.1
+          \--- org.springframework.boot:spring-boot-starter-webmvc:4.1.1
+               \--- runtimeClasspath (requested org.springframework.boot:spring-boot-starter-webmvc)
+
+A web-based, searchable dependency report is available by adding the --scan option.
+
+BUILD SUCCESSFUL in 1s
+1 actionable task: 1 executed
+Consider enabling configuration cache to speed up this build: https://docs.gradle.org/9.7.1/userguide/configuration_cache_enabling.html
